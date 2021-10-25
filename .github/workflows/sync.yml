@@ -27,8 +27,11 @@ jobs:
           git checkout $GITHUB_SHA -- README.md
           mv README.md index.md
           git add index.md README.md
-          git commit -m "Sync readme from commit $GITHUB_SHA"
-          test $? -eq 0 && git push origin gh-pages || echo "Nothing committed, not pushing"
+          if git commit -m "Sync readme from commit $GITHUB_SHA"; then
+            git push origin gh-pages
+          else
+            echo "Nothing committed, not pushing."
+          fi
 
   sync-crds:
     runs-on: ubuntu-latest
@@ -42,5 +45,7 @@ jobs:
           git fetch -a
           cp config/crd/bases/*.yaml charts/aws-pca-issuer/crds/
           git add charts
-          git commit -m "Sync CRDs from config to charts from commit $GITHUB_SHA"
-          test $? -eq 0 && git push origin main || echo "Nothing committed, not pushing"
+          if git commit -m "Sync CRDs from config to charts from commit $GITHUB_SHA"; then
+            git push origin main
+          else
+            echo "Nothing committed, not pushing"
