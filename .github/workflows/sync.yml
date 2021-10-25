@@ -8,8 +8,8 @@ on:
       - 'config/crd/bases/**.yaml'
 
 env:
-  GITHUB_USER_NAME: GitHub Actions
-  GITHUB_USER_EMAIL: githubactions@users.noreply.github.com
+  GITHUB_USER_NAME: github-actions
+  GITHUB_USER_EMAIL: github-actions@users.noreply.github.com
 
 jobs:
   sync-readme:
@@ -42,7 +42,6 @@ jobs:
         run: |
           git config --global user.name "$GITHUB_USER_NAME"
           git config --global user.email "$GITHUB_USER_EMAIL"
-          git fetch -a
           cp config/crd/bases/*.yaml charts/aws-pca-issuer/crds/
           git add charts
           if git commit -m "Sync CRDs from config to charts from commit $GITHUB_SHA"; then
