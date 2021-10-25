@@ -49,3 +49,4 @@ jobs:
             git push origin main
           else
             echo "Nothing committed, not pushing"
+          fi
