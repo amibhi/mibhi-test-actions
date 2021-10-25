@@ -10,7 +10,7 @@ env:
 on:
   push:
     branches:
-      - ${{ env.GH_MAIN_BRANCH }}
+      - 'main'
     paths:
       - 'README.md'
       - 'config/crd/bases/**.yaml'
