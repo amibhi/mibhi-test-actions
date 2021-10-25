@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - 'README.md'
+  pull-request:
+    paths:
       - 'config/crd/bases/**.yaml'
 
 env:
@@ -13,6 +15,7 @@ env:
 
 jobs:
   sync-readme:
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -34,18 +37,37 @@ jobs:
           fi
 
   sync-crds:
+    if: ${{ github.event_name == 'pull-request' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Copy CRDs to helm chart and push
+      - name: Copy CRDs to helm chart
         run: |
-          git config user.name "$GITHUB_USER_NAME"
-          git config user.email "$GITHUB_USER_EMAIL"
           cp config/crd/bases/*.yaml charts/aws-pca-issuer/crds/
-          git add charts
-          if git commit -m "Sync CRDs from config to charts from commit $GITHUB_SHA"; then
-            git push origin main
-          else
-            echo "Nothing committed, not pushing"
-          fi
+      - name: Update pull request
+        uses: gr2m/create-or-update-pull-request-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: ${{ github.base_ref }}
+          path: "charts/"
+          commit-message: "Sync CRDs from config to charts from commit ${{ github.sha }}"
+          author: "${{ env.GITHUB_USER_NAME }} <${{ env.GITHUB_USER_EMAIL }}>"
+
+  # sync-crds:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+  #     - name: Copy CRDs to helm chart
+  #       run: |
+  #         git config user.name "$GITHUB_USER_NAME"
+  #         git config user.email "$GITHUB_USER_EMAIL"
+  #         cp config/crd/bases/*.yaml charts/aws-pca-issuer/crds/
+  #         git add charts
+  #         if git commit -m "Sync CRDs from config to charts from commit $GITHUB_SHA"; then
+  #           git push origin main
+  #         else
+  #           echo "Nothing committed, not pushing"
+  #         fi
