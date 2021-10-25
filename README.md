@@ -1,6 +1,4 @@
 # mibhi-test-actions
 Test GH actions for syncing files
 
-This is a change
-
-Another change
+Test with 2 CIs
