@@ -1,0 +1,35 @@
+# workflows to sync files before continuing with other push/pull CIs
+name: Sync
+on:
+  push:
+    paths:
+      - 'README.md'
+      - 'config/crd/bases/**.yaml'
+
+jobs:
+  sync-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+      - name: Push README to gh-pages branch
+        run: |
+          git checkout main -- README.md
+          mv README.md index.md
+          git add index.md README.md
+          git commit -m "sync readme from commit $GITHUB_SHA"
+          test $? -eq 0 && git push origin gh-pages || echo "Nothing committed, not pushing"
+
+  sync-crds:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Copy CRDs to helm chart and push
+        run: |
+          cp config/crd/bases/*.yaml charts/aws-pca-issuer/crds/
+          git add charts
+          git commit -m "sync CRDs from config to charts from commit $GITHUB_SHA"
+          test $? -eq 0 && git push origin main || echo "Nothing committed, not pushing"
