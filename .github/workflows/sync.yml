@@ -3,9 +3,13 @@ name: Sync
 
 on:
   push:
+    branches:
+      - 'main'
     paths:
       - 'README.md'
   pull_request:
+    branches:
+      - 'main'
     paths:
       - 'config/crd/bases/**.yaml'
 
