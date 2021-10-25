@@ -1,17 +1,19 @@
 # workflows to sync files before continuing with other push/pull CIs
 name: Sync
 
-on:
-  push:
-    branches:
-      - 'main'
-    paths:
-      - 'README.md'
-      - 'config/crd/bases/**.yaml'
-
 env:
   GITHUB_USER_NAME: github-actions
   GITHUB_USER_EMAIL: github-actions@github.com
+  GH_PAGES_BRANCH: gh-pages
+  GH_MAIN_BRANCH: main
+
+on:
+  push:
+    branches:
+      - ${{ env.GH_MAIN_BRANCH }}
+    paths:
+      - 'README.md'
+      - 'config/crd/bases/**.yaml'
 
 jobs:
   sync-readme:
@@ -20,7 +22,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          ref: gh-pages
+          ref: ${{ env.GH_PAGES_BRANCH }}
       - name: Push README to gh-pages branch
         run: |
           git config user.name "$GITHUB_USER_NAME"
@@ -30,7 +32,7 @@ jobs:
           mv README.md index.md
           git add index.md README.md
           if git commit -m "Sync readme from commit $GITHUB_SHA"; then
-            git push origin gh-pages
+            git push origin $GH_PAGES_BRANCH
           else
             echo "Nothing committed, not pushing."
           fi
@@ -47,7 +49,7 @@ jobs:
           cp config/crd/bases/*.yaml charts/aws-pca-issuer/crds/
           git add charts
           if git commit -m "Sync CRDs from config to charts from commit $GITHUB_SHA"; then
-            git push origin main
+            git push origin $GH_MAIN_BRANCH
           else
             echo "Nothing committed, not pushing"
           fi
