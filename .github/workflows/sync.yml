@@ -1,10 +1,15 @@
 # workflows to sync files before continuing with other push/pull CIs
 name: Sync
+
 on:
   push:
     paths:
       - 'README.md'
       - 'config/crd/bases/**.yaml'
+
+env:
+  GITHUB_USER_NAME: GitHubActionsRunId $GITHUB_RUN_ID
+  GITHUB_USER_EMAIL: githubactions@users.noreply.github.com
 
 jobs:
   sync-readme:
@@ -16,7 +21,10 @@ jobs:
           ref: gh-pages
       - name: Push README to gh-pages branch
         run: |
-          git checkout main -- README.md
+          git config --global user.name '$GITHUB_USER_NAME'
+          git config --global user.email '$GITHUB_USER_EMAIL'
+          git fetch -a
+          git checkout $GITHUB_SHA -- README.md
           mv README.md index.md
           git add index.md README.md
           git commit -m "sync readme from commit $GITHUB_SHA"
@@ -29,6 +37,9 @@ jobs:
         uses: actions/checkout@v2
       - name: Copy CRDs to helm chart and push
         run: |
+          git config --global user.name '$GITHUB_USER_NAME'
+          git config --global user.email '$GITHUB_USER_EMAIL'
+          git fetch -a
           cp config/crd/bases/*.yaml charts/aws-pca-issuer/crds/
           git add charts
           git commit -m "sync CRDs from config to charts from commit $GITHUB_SHA"
