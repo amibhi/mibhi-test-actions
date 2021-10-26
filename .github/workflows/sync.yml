@@ -12,6 +12,7 @@ on:
       - 'main'
     paths:
       - 'config/crd/bases/**.yaml'
+      - 'charts/aws-pca-issuer/crds/**.yaml'
 
 env:
   GITHUB_USER_NAME: github-actions
