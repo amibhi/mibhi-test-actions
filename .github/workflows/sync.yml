@@ -1,11 +1,5 @@
-# workflows to sync files before continuing with other push/pull CIs
+# workflows to sync certain files when changes are pushed to the master branch
 name: Sync
-
-env:
-  GITHUB_USER_NAME: github-actions
-  GITHUB_USER_EMAIL: github-actions@github.com
-  GH_PAGES_BRANCH: gh-pages
-  GH_MAIN_BRANCH: main
 
 on:
   push:
@@ -13,10 +7,20 @@ on:
       - 'main'
     paths:
       - 'README.md'
+  pull_request:
+    branches:
+      - 'main'
+    paths:
       - 'config/crd/bases/**.yaml'
+
+env:
+  GITHUB_USER_NAME: github-actions
+  GITHUB_USER_EMAIL: github-actions@github.com
+  GH_PAGES_BRANCH: gh-pages
 
 jobs:
   sync-readme:
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -38,18 +42,25 @@ jobs:
           fi
 
   sync-crds:
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Copy CRDs to helm chart
         run: |
-          git config user.name "$GITHUB_USER_NAME"
-          git config user.email "$GITHUB_USER_EMAIL"
           cp config/crd/bases/*.yaml charts/aws-pca-issuer/crds/
-          git add charts
-          if git commit -m "Sync CRDs from config to charts from commit $GITHUB_SHA"; then
-            git push origin $GH_MAIN_BRANCH
-          else
-            echo "Nothing committed, not pushing"
-          fi
+      - name: Update pull request
+        uses: gr2m/create-or-update-pull-request-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: ${{ github.base_ref }}
+          path: "charts/"
+          commit-message: "Sync CRDs from config to charts from commit ${{ github.sha }}"
+          author: "${{ env.GITHUB_USER_NAME }} <${{ env.GITHUB_USER_EMAIL }}>"
+      - name: Comment on pull request
+        uses: thollander/actions-comment-pull-request@v1
+        with:
+          message: 'Detected different CRDs in the `config/crd/bases` directory and `charts/aws-pca-issuer/crds` directory. These CRDs have been synced and the commit has been added to this PR.'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
