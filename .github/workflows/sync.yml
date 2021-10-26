@@ -58,10 +58,6 @@ jobs:
           FILES=$(curl -s -X GET -G $URL | jq -r '.[] | .filename')
 
           # Check if CRDs are modified in charts or config or both.
-          # In the event that CRDs are modified in both directories,
-          # there are two possible outcomes:
-          #   1. all CRDs are already identical
-          #   2. CRDs are not identical
           # Unfortunately we cannot overwrite contributor's changes
           # using the update-pull-request-action, so if
           # both CRDs are changed and not equal, we fail the workflow
