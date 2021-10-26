@@ -55,7 +55,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          branch: ${{ github.base_ref }}
+          branch: ${{ github.head_ref }}
           path: "charts/"
           commit-message: "Sync CRDs from config to charts from commit ${{ github.sha }}"
           author: "${{ env.GITHUB_USER_NAME }} <${{ env.GITHUB_USER_EMAIL }}>"
