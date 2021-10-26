@@ -17,6 +17,8 @@ env:
   GITHUB_USER_NAME: github-actions
   GITHUB_USER_EMAIL: github-actions@github.com
   GH_PAGES_BRANCH: gh-pages
+  CONFIG_DIR: config/crd/bases
+  CHARTS_DIR: charts/aws-pca-issuer/crds
 
 jobs:
   sync-readme:
@@ -47,10 +49,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Check for different CRDs
+        continue-on-error: true
+        run: |
+          for config_file in $CONFIG_DIR/*.yaml; do
+            chart_file=$CHARTS_DIR/$(basename $config_file)
+            if ! diff $config_file $chart_file; then
+              echo "${config_file} and ${chart_file} are different"
+              exit 1
+            fi
+          done
+
       - name: Copy CRDs to helm chart
+        if: ${{ failure() }}
         run: |
           cp config/crd/bases/*.yaml charts/aws-pca-issuer/crds/
+
       - name: Update pull request
+        if: ${{ failure() }}
         uses: gr2m/create-or-update-pull-request-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,7 +76,9 @@ jobs:
           path: "charts/"
           commit-message: "Sync CRDs from config to charts from commit ${{ github.sha }}"
           author: "${{ env.GITHUB_USER_NAME }} <${{ env.GITHUB_USER_EMAIL }}>"
+
       - name: Comment on pull request
+        if: ${{ failure() }}
         uses: thollander/actions-comment-pull-request@v1
         with:
           message: 'Detected different CRDs in the `config/crd/bases` directory and `charts/aws-pca-issuer/crds` directory. These CRDs have been synced and the commit has been added to this PR.'
