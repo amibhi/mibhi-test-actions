@@ -55,7 +55,7 @@ jobs:
         id: which-crd-modified
         run: |
           URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${{ github.event.pull_request.number }}/files"
-          FILES=$(curl -s -X GET -G $URL | jq -r '.[] | .filename')
+          FILES=$(curl -s -X GET -G $URL --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' | jq -r '.[] | .filename')
 
           # Check if CRDs are modified in charts or config or both.
           # Unfortunately we cannot overwrite contributor's changes
