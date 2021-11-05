@@ -51,6 +51,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
+          repo: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.head_ref }}
 
       - name: Check which CRDs are modified
