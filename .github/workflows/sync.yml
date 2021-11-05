@@ -106,7 +106,7 @@ jobs:
         with:
           branch: ${{ github.head_ref }}
           path: "."
-          commit-message: "Sync CRDs in config and charts directories from commit ${{ github.sha }}"
+          commit-message: "Sync CRDs in config and charts directories from commit ${{ github.event.pull_request.merge_commit_sha }}"
           author: "${{ env.GITHUB_USER_NAME }} <${{ env.GITHUB_USER_EMAIL }}>"
 
       - name: Comment on pull request that CRDs were synced
