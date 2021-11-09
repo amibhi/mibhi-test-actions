@@ -51,6 +51,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.head_ref }}
 
       - name: Check which CRDs are modified
@@ -78,17 +79,17 @@ jobs:
           fi
 
       - name: Copy changed config CRDs to chart
-        if: ${{ steps.which-crd-modified.outputs.result == 'config' }}
+        if: ${{ steps.which-crd-modified.outputs.result == 'config' && !github.event.pull_request.head.repo.fork }}
         run: |
           cp ${CONFIG_DIR}/*.yaml ${CHARTS_DIR}
 
       - name: Copy changed chart CRDs to config
-        if: ${{ steps.which-crd-modified.outputs.result == 'charts' }}
+        if: ${{ steps.which-crd-modified.outputs.result == 'charts' && !github.event.pull_request.head.repo.fork }}
         run: |
           cp ${CHARTS_DIR}/*.yaml ${CONFIG_DIR}
 
       - name: Verify both CRDs are the same
-        if: ${{ steps.which-crd-modified.outputs.result == 'both' }}
+        if: ${{ steps.which-crd-modified.outputs.result == 'both' || github.event.pull_request.head.repo.fork }}
         run: |
           for config_file in $CONFIG_DIR/*.yaml; do
             chart_file=$CHARTS_DIR/$(basename $config_file)
@@ -99,7 +100,7 @@ jobs:
           done
 
       - name: Update pull request with synced CRDs
-        if: ${{ steps.which-crd-modified.outputs.result != 'both' }}
+        if: ${{ steps.which-crd-modified.outputs.result != 'both' && !github.event.pull_request.head.repo.fork }}
         uses: gr2m/create-or-update-pull-request-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -110,7 +111,7 @@ jobs:
           author: "${{ env.GITHUB_USER_NAME }} <${{ env.GITHUB_USER_EMAIL }}>"
 
       - name: Comment on pull request that CRDs were synced
-        if: ${{ steps.which-crd-modified.outputs.result != 'both' }}
+        if: ${{ steps.which-crd-modified.outputs.result != 'both' && !github.event.pull_request.head.repo.fork }}
         uses: thollander/actions-comment-pull-request@v1
         with:
           message: 'Detected different CRDs in the `config/crd/bases` directory and `charts/aws-pca-issuer/crds` directory. These CRDs have been synced and the commit has been added to this PR for review.'
